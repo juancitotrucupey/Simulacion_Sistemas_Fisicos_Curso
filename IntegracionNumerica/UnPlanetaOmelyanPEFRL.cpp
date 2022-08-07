@@ -1,0 +1,103 @@
+// UnPlaneta por LeapFrog
+#include <iostream>
+#include <cmath>
+#include "Vector.h"
+using namespace std;
+
+const double GM=1.0;
+const double CHI   =0.1786178958448091;
+
+const double LAMBDA=-0.2123418310626054;
+const double XI    =-0.06626458266981849;
+const double uno_m2LAMBDA_S2=(1-2*LAMBDA)/2;
+const double uno_m2_XIplusCHI=(1-2*(XI+CHI));
+
+class Cuerpo{
+private:
+  Vector3D r,V,F;
+  double m,R;
+public:
+  void Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0);
+  void CalculeFuerza(void);
+  void Mueva_r(double dt,double CTE);
+  void Mueva_V(double dt,double CTE);
+  void Dibujese(void);
+  double Getx(void){return x;}; //Funcion inline (macro)
+  double Gety(void){return y;}; //Funcion inline (macro)
+};
+void Cuerpo::Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0){
+  r.cargue(x0,y0,0);  r.cargue(Vx0,Vy0,0); m=m0; R=R0;
+}
+void Cuerpo::CalculeFuerza(void){
+  double aux=-GM*m*pow(norma2(r),-1.5);
+  F=r*aux;
+}
+void Cuerpo::Mueva_r(double dt,double CTE){
+  r+=V*(CTE*dt);  
+}
+void Cuerpo::Mueva_V(double dt,double CTE){
+  V+=F*(CTE*dt/m);
+
+}
+void Cuerpo::Dibujese(void){
+  cout<<", "<<r.x<<"+"<<R<<"*cos(t),"<<r.y<<"+"<<R<<"*sin(t)";
+}
+//-------------------------------------
+void InicieAnimacion(void){
+  //  cout<<"set terminal gif animate"<<endl; 
+  //  cout<<"set output 'MiBalon.gif'"<<endl;
+  cout<<"unset key"<<endl;
+  cout<<"set xrange [-12:12]"<<endl;
+  cout<<"set yrange [-12:12]"<<endl;
+  cout<<"set size ratio -1"<<endl;
+  cout<<"set parametric"<<endl;
+  cout<<"set trange [0:7]"<<endl;
+  cout<<"set isosamples 12"<<endl;  
+}
+void InicieCuadro(void){
+    cout<<"plot 0,0 ";
+}
+void TermineCuadro(void){
+    cout<<endl;
+}
+
+
+int main(void){
+  Cuerpo Planeta;
+  double t,Deltat=1.0;
+  double r=10,m=1; 
+  double Omega,Vy0, T, tmax,tdibujo;
+  int ndibujos=1000;
+
+  Omega=sqrt(GM*pow(r,-3)); Vy0=Omega*r; T=2*M_PI/Omega;
+  tmax=1.1*T; tdibujo;
+
+  //  InicieAnimacion();
+
+  //------------(x0,y0,Vx0,Vy0,m0   ,R0);
+  Planeta.Inicie(r ,0 ,  0,0.5*Vy0,m    ,1 );
+  for(t=0,tdibujo=0;t<tmax;t+=Deltat,tdibujo+=Deltat){
+    cout<<Planeta.Getx()<<" "<<Planeta.Gety()<<endl;
+    //Animacion
+    /*
+    if(tdibujo>tmax/ndibujos){
+      InicieCuadro();
+      Planeta.Dibujese();
+      TermineCuadro();
+      tdibujo=0;
+    }
+    */
+    Planeta.Mueva_r(Deltat,CHI);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,uno_m2LAMBDA_S2);
+    Planeta.Mueva_r(Deltat,XI);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,LAMBDA); 
+    Planeta.Mueva_r(Deltat,uno_m2_XIplusCHI);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,LAMBDA); 
+    Planeta.Mueva_r(Deltat,XI);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,uno_m2LAMBDA_S2);
+    Planeta.Mueva_r(Deltat,CHI);
+
+  }
+
+  return 0;
+}

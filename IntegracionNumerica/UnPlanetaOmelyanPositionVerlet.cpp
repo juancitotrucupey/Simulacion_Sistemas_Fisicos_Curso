@@ -1,0 +1,91 @@
+// UnPlaneta por LeapFrog
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+const double GM=1.0;
+const double CHI   =0.1931833275037836;
+const double uno_m2CHI=(1-2*CHI);
+
+class Cuerpo{
+private:
+  double x,y,Vx,Vy,Fx,Fy,m,R;
+public:
+  void Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0);
+  void CalculeFuerza(void);
+  void Mueva_r(double dt,double CTE);
+  void Mueva_V(double dt,double CTE);
+  void Dibujese(void);
+  double Getx(void){return x;}; //Funcion inline (macro)
+  double Gety(void){return y;}; //Funcion inline (macro)
+};
+void Cuerpo::Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0){
+  x=x0;  y=y0;  Vx=Vx0;  Vy=Vy0;  m=m0;  R=R0;
+}
+void Cuerpo::CalculeFuerza(void){
+  double aux=-GM*m*pow(x*x+y*y,-1.5);
+  Fx=x*aux; Fy=y*aux;
+}
+void Cuerpo::Mueva_r(double dt,double CTE){
+  x+=CTE*dt*Vx;  y+=CTE*dt*Vy;
+}
+void Cuerpo::Mueva_V(double dt,double CTE){
+  Vx+=CTE*dt*Fx/m;  Vy+=CTE*dt*Fy/m;
+}
+void Cuerpo::Dibujese(void){
+  cout<<", "<<x<<"+"<<R<<"*cos(t),"<<y<<"+"<<R<<"*sin(t)";
+}
+//-------------------------------------
+void InicieAnimacion(void){
+  //  cout<<"set terminal gif animate"<<endl; 
+  //  cout<<"set output 'MiBalon.gif'"<<endl;
+  cout<<"unset key"<<endl;
+  cout<<"set xrange [-12:12]"<<endl;
+  cout<<"set yrange [-12:12]"<<endl;
+  cout<<"set size ratio -1"<<endl;
+  cout<<"set parametric"<<endl;
+  cout<<"set trange [0:7]"<<endl;
+  cout<<"set isosamples 12"<<endl;  
+}
+void InicieCuadro(void){
+    cout<<"plot 0,0 ";
+}
+void TermineCuadro(void){
+    cout<<endl;
+}
+
+
+int main(void){
+  Cuerpo Planeta;
+  double t,Deltat=0.1;
+  double r=10,m=1; 
+  double Omega,Vy0, T, tmax,tdibujo;
+  int ndibujos=1000;
+
+  Omega=sqrt(GM*pow(r,-3)); Vy0=Omega*r; T=2*M_PI/Omega;
+  tmax=1.1*T; tdibujo;
+
+  //  InicieAnimacion();
+
+  //------------(x0,y0,Vx0,Vy0,m0   ,R0);
+  Planeta.Inicie(r ,0 ,  0,0.5*Vy0,m    ,1 );
+  for(t=0,tdibujo=0;t<tmax;t+=Deltat,tdibujo+=Deltat){
+    cout<<Planeta.Getx()<<" "<<Planeta.Gety()<<endl;
+    //Animacion
+    /*
+    if(tdibujo>tmax/ndibujos){
+      InicieCuadro();
+      Planeta.Dibujese();
+      TermineCuadro();
+      tdibujo=0;
+    }
+    */
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,CHI);
+    Planeta.Mueva_r(Deltat,0.5);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,uno_m2CHI); 
+    Planeta.Mueva_r(Deltat,0.5);
+    Planeta.CalculeFuerza(); Planeta.Mueva_V(Deltat,CHI); 
+  }
+
+  return 0;
+}

@@ -1,0 +1,76 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+const double Err=1e-7;
+
+double f1 (double x1, double x2, double t, double Omega)
+{
+  return x2;
+}
+double f2(double x1, double x2,double t, double Omega)
+{
+  return -Omega*Omega*x1;
+}
+
+
+
+void UnPasoRungeKutta4Acoplado(double & x1, double & x2, double & t, double dt, double Omega)
+{ double dx11, dx12, dx13, dx14;                      double dx21, dx22, dx23, dx24;
+  
+  dx11=dt*f1(x1,x2,t, Omega);                                dx21=dt*f2(x1,x2,t, Omega);
+  dx12 = dt*f1(x1+dx11/2,x2+dx21/2,t+dt/2, Omega);           dx22 = dt*f2(x1+dx11/2,x2+dx21/2,t+dt/2, Omega);
+  dx13 = dt*f1(x1+dx12/2,x2+dx22/2,t+dt/2, Omega);           dx23 = dt*f2(x1+dx12/2,x2+dx22/2,t+dt/2, Omega);
+  dx14 = dt*f1(x1+dx13,x2 + dx23,t+dt, Omega);               dx24 = dt*f2(x1+dx13,x2 + dx23,t+dt, Omega);
+  
+  x1+=(dx11 + 2*dx12 + 2*dx13 + dx14)/6;               x2+=(dx21 + 2*dx22 + 2*dx23 + dx24)/6;
+  t+=dt;
+}
+
+double Descache (double Omega)
+{
+  double t,x1,x2;
+  double dt=0.01;
+  
+ for(t=0,x1=0,x2=1;t<1.0;)
+    {
+      UnPasoRungeKutta4Acoplado(x1,x2,t,dt, Omega);
+    }
+ return x1;
+}
+
+double CeroPorBiseccion(double a, double b)
+{
+  double fa=Descache(a),fb=Descache(b);
+  double m,fm;
+  
+  
+  while((b-a)>Err)
+    {
+      m=(a+b)/2;
+      fm=Descache(m);
+      if(fb*fm<=0)
+	{a=m;
+	  fa=fm;}
+      else
+	{b=m;
+	  fb=fm;}
+      
+    }
+
+      return (a+b)/2;
+
+}
+
+int main(void){
+
+  double a,b;
+
+  cout<<"ingrese el limite superior de Omega ";cin>>b;
+  cout<<"ingrese el limite inferior de Omega ";cin>>a;
+
+  cout<<"el valor del cero es "<<CeroPorBiseccion(a,b)<<endl;
+  
+  return 0;
+}

@@ -1,0 +1,39 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+double f (double x, double t)
+{
+
+  return x;
+}
+double Xexacta(double t)
+{
+  return exp(t);
+}
+
+
+
+void UnPasoEuler(double & x, double & t, double dt)
+{ double dx1, dx2, dx3, dx4;
+  double dx;
+  dx=dt*f(x,t);
+  x+=dx;
+  t+=dt;
+}
+
+int main(void){
+
+  double t=0, x=1;
+  double dt=0.025;
+  
+  for(t=0,x=1;t<5;)
+    {
+      cout<<t<<" "<<x<<" "<<Xexacta(t)<<endl;
+      UnPasoEuler(x,t,dt);
+    }
+
+  
+  return 0;
+}

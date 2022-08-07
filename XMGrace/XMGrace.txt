@@ -1,0 +1,10 @@
+En este curso se importaron los datos generados por c++ a un archivo de texto, 
+para utilizarlos en xmgrace se escoge la opción Data->Import->ASCII-> escoge el
+archivo de datos (.dat) que contiene los datos, se puede especificar la cantidad
+de columnas del arhivo y si son x o y, y se escoge OK (luego CANCEL para salir
+de esa pantalla emergente). Para guardar un archivo escoger save as, y tener en
+que el nombre del archivo en Filter debe ser el mismo que en Selection (parte
+inferior de la ventana emergente). Para generar una imagen escoger print setup, 
+en Device setup escoger el tipo de arhivo a generar (en Output se puede espeficificar
+el nombre del archivo generado y el directorio donde se creará), escoger apply 
+y accept.

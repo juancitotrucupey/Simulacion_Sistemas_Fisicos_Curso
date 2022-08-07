@@ -1,0 +1,146 @@
+#include <iostream>
+#include <fstream>
+#include <cmath>
+using namespace std;
+
+const int Lx=400;
+const int Ly=200;
+
+const double C=0.5;     // OJO:  C< sqrt(1/2)=0.707
+const double C2=C*C;
+const double UM2C2=1-2*C2;
+const double Tau=0.5;
+
+const double A=10;
+const double Lambda=10;
+const double Omega=2*M_PI*C/Lambda;
+
+
+class LatticeBoltzmann{
+private:
+  double w[5];
+  int V[2][5];  //V[x=0,y=1][i]  , i=el vector velocidad
+  double f[Lx][Ly][5],fnew[Lx][Ly][5]; //f[ix][iy][i]  ix,iy=la celda  ,  i=el vector velocidad
+public:
+  LatticeBoltzmann(void);
+  void Inicie(void);
+  double Rho(int ix,int iy,int t,bool CalculeConNew);
+  double Jx(int ix,int iy);
+  double Jy(int ix,int iy);
+  double feq(double Rho0,double Jx0,double Jy0,int i,int ix,int iy);
+  void Colisione(int t);
+  void Adveccione(void);
+  double Ccelda(int ix, int iy);
+  void Imprimase(char * NombreArchivo,int t);
+  void ImprimaUnaLinea(char * NombreArchivo,int t);
+};
+LatticeBoltzmann::LatticeBoltzmann(void){
+  //D2Q5
+  //Cargar los pesos
+  w[0]=1.0/3; w[1]=w[2]=w[3]=w[4]=1.0/6;
+  //Cargar los vectores velicidad
+  V[0][0]=0; 
+  V[1][0]=0;
+
+  V[0][1]=1;   V[0][2]=0;   V[0][3]=-1;  V[0][4]=0; 
+  V[1][1]=0;   V[1][2]=1;   V[1][3]=0;   V[1][4]=-1;
+}
+void LatticeBoltzmann::Inicie(void){
+  for(int ix=0;ix<Lx;ix++)
+    for(int iy=0;iy<Ly;iy++)
+      for(int i=0;i<5;i++)
+	f[ix][iy][i]=fnew[ix][iy][i]=0;
+}
+double LatticeBoltzmann::Rho(int ix,int iy,int t,bool CalculeConNew){
+  if(ix==0)
+    return sin(Omega*t);
+  else{
+    double suma=0;
+    for(int i=0;i<5;i++)
+      if(CalculeConNew)
+	suma+=fnew[ix][iy][i];
+      else
+	suma+=f[ix][iy][i];
+    return suma;
+  }
+}
+double LatticeBoltzmann::Jx(int ix,int iy){
+  double suma=0;
+  for(int i=0;i<5;i++)
+    suma+=f[ix][iy][i]*V[0][i];
+  return suma;
+}
+double LatticeBoltzmann::Jy(int ix,int iy){
+  double suma=0;
+  for(int i=0;i<5;i++)
+    suma+=f[ix][iy][i]*V[1][i];
+  return suma;
+}
+double LatticeBoltzmann::feq(double Rho0,double Jx0,double Jy0,int i,int ix, int iy){
+  if(i!=0)
+    return 3*w[i]*(Ccelda(ix,iy)*Ccelda(ix,iy)*Rho0+(V[0][i]*Jx0+ V[1][i]*Jy0));
+  else
+    return Rho0*(1-3*Ccelda(ix,iy)*Ccelda(ix,iy)*(1-w[0]));
+}
+void LatticeBoltzmann::Colisione(int t){
+  int ix,iy,i; double Rho0,Jx0,Jy0;
+  for(ix=0;ix<Lx;ix++) //Para Cada Celda
+    for(iy=0;iy<Ly;iy++){
+      Rho0=Rho(ix,iy,t,false); Jx0=Jx(ix,iy);  Jy0=Jy(ix,iy);
+      for(i=0;i<5;i++) //en cada direccion      
+	if(ix==0 )
+	  fnew[ix][iy][i]=feq(Rho0,Jx0,Jy0,i,ix,iy);
+	else
+	  fnew[ix][iy][i]=f[ix][iy][i]-1.0/Tau*(f[ix][iy][i]-feq(Rho0,Jx0,Jy0,i,ix,iy));
+    }
+}
+void LatticeBoltzmann::Adveccione(void){
+  for(int ix=0;ix<Lx;ix++)
+    for(int iy=0;iy<Ly;iy++)
+      for(int i=0;i<5;i++)
+	f[(ix+V[0][i]+Lx)%Lx][(iy+V[1][i]+Ly)%Ly][i]=fnew[ix][iy][i];
+}
+
+double LatticeBoltzmann::Ccelda(int ix, int iy){
+   return 0.5;
+   /* double C;
+  C=(0.5/2)*((-1)*tanh(ix-100))+0.75;
+  return C;
+   */
+}
+void LatticeBoltzmann::Imprimase(char * NombreArchivo,int t){
+  ofstream MiArchivo(NombreArchivo);
+  for(int ix=0;ix<Lx/2;ix++){
+    for(int iy=0;iy<Ly;iy++)
+      MiArchivo<<ix<<" "<<iy<<" "<<Rho(ix,iy,t,true)<<endl;
+    MiArchivo<<endl;
+  }
+  MiArchivo.close();
+}
+void LatticeBoltzmann::ImprimaUnaLinea(char * NombreArchivo,int t){
+  ofstream MiArchivo(NombreArchivo);
+  int iy=Ly/2;
+  for(int ix=0;ix<Lx/2;ix++)
+    MiArchivo<<ix<<" "<<Rho(ix,iy,t,true)<<endl; 
+  MiArchivo.close();
+}
+
+//------------------------ Funciones Globales ---------------
+
+
+int main(void){
+  LatticeBoltzmann Ondas;
+  int t,tmax=400;
+  char NombreArchivo[]="Ondas.dat";
+  char NombreArchivoLinea[]="Linea.dat";
+
+  Ondas.Inicie();
+  for(t=0;t<tmax;t++){
+    Ondas.Adveccione();
+    Ondas.Colisione(t);
+  }
+  Ondas.Imprimase(NombreArchivo,t);
+  Ondas.ImprimaUnaLinea(NombreArchivoLinea,t);
+
+  return 0;
+}

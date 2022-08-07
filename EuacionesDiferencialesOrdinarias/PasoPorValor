@@ -1,0 +1,7 @@
+Paso por valor: se pasa el valor para que sea utilizado dentro de la función, pero no se manipula la variable externa.
+
+Paso por referencia: se pasa el puntero de la función, para que la variable pueda ser manipulada dentro de la función. son la misma variable
+, incluso si tienen nombre diferente.
+
+Mirar metodo de Runge Kutta
+RungeKutta aplicado a ecuaciones de varias variables, desacoplar ecuaciones de orden mayor o igual a dos utilizando varias ecuaciones acopladas de primer orden

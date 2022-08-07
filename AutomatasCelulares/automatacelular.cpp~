@@ -1,0 +1,106 @@
+#include <iostream>
+#include <cmath>
+#include "../Random64.h"
+
+using namespace std;
+
+const int L=1000;
+const double p=0.5;
+const int Ngases=100;
+
+class LatticeGas{
+	private:
+		int V[2];
+		int n[L][2], nnew[L][2]; //int n[ix,i], nnew[ix,i]; ix=la posicion de la celda, i=la direccion
+	public:
+		LatticeGas(void);//constructor
+		void Inicie(void);
+		void Show(void);
+		void Colisione(Crandom & ran);
+		void Adveccione(void);
+		int DondeEstaLaBolita(void);
+};
+
+LatticeGas::LatticeGas(void){
+	V[0]=1; V[1]=-1;
+}
+void LatticeGas::Inicie(void){
+	for(int ix=0;ix<L;ix++)
+		for(int i=0;i<L;i++)
+			n[ix][i]=0;
+			
+	n[L/2][0]=1;
+}
+void LatticeGas::Show(void){
+	int i, ix;	
+	for(int i=0;i<2;i++){
+		for(int ix=0;ix<L;ix++)
+			cout<<n[ix][i]<<" ";
+		cout<<endl;
+		}
+	cout<<endl;
+}
+void LatticeGas::Colisione(Crandom & ran){
+	for (int ix=0; ix<L; ix++){
+		if(ran.r()<p){ //quédese quieto con probabilidad p
+			nnew[ix][0]=n[ix][0];
+			nnew[ix][1]=n[ix][1];
+		}
+		else{ //voltéese con probabilidad (1-p)
+			nnew[ix][0]=n[ix][1];
+			nnew[ix][1]=n[ix][0];
+		}
+	}
+}
+
+void LatticeGas::Adveccione(void){
+	for(int ix=0;ix<L;ix++){
+		for(int i=0;i<2;i++){
+			n[(ix+V[i]+L)%L/*siguiente posición*/][i]=nnew[ix][i];
+		}
+	}
+}
+
+int LatticeGas::DondeEstaLaBolita(void){
+	int ix=0;
+	while(n[ix][0]+n[ix][1]==0) ix++;
+	return ix;
+}
+
+//--------------------------Función Global------------------------------
+double sigma2(LatticeGas * Difusion){
+	int ig;
+	double Xprom, s2; 
+	//Calcular Xprom
+	for(Xprom=0, ig=0; ig<Ngases; ig++)
+		Xprom+=Difusion[ig].DondeEstaLaBolita();
+	Xprom/=Ngases;
+	//Calcular s^2
+	for(s2=0, ig=0; ig<Ngases; ig++)
+		s2+=pow(Difusion[ig].DondeEstaLaBolita()-Xprom,2);
+	s2/=(Ngases-1);
+	//Devuelva el resultado
+	return s2;
+}
+
+int main(void){
+	LatticeGas Difusion[Ngases];
+	Crandom ran(12);
+	int ig, t;
+	int tmax=100;
+	
+	for(ig=0; ig<Ngases; ig++) Difusion[ig].Inicie();
+	
+	for (t=0; t<tmax; t++){
+		for(ig=0; ig<Ngases; ig++) Difusion[ig].Colisione(ran);
+		for(ig=0; ig<Ngases; ig++) Difusion[ig].Adveccione();
+		cout<<t<<" "<<sigma2(Difusion)<<endl;
+	}
+	/*Difusion.Inicie();
+	Difusion.Show();
+	Difusion.Colisione(ran);
+	Difusion.Adveccione();
+	cout<<endl;
+	Difusion.Show();*/
+	return 0;
+}

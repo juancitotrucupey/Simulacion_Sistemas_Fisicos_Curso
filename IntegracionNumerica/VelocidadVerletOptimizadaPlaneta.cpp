@@ -1,0 +1,107 @@
+// Metodo de la lanzadera
+#include <iostream>
+#include <cmath>
+using namespace std;
+ 
+const double GM=1.0;
+const double chi=0.5;
+// const double chi=0.193183325067836;
+const double uno_2chi = (1-2*chi);
+class Cuerpo{
+private:
+  double x,y,Vx,Vy,Fx,Fy,m,R;
+public:
+  void Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0);
+  void CalculeFuerza(void);
+  void Mueva_r1(double dt);
+   void Mueva_V(double dt);
+   void Mueva_r2(double dt);
+   void Dibujese(void);
+  double Getx(void){return x;}; //Funcion inline (macro)
+  double Gety(void){return y;}; //Funcion inline (macro)
+};
+void Cuerpo::Inicie(double x0,double y0,double Vx0,double Vy0,double m0,double R0){
+  x=x0;  y=y0;  Vx=Vx0;  Vy=Vy0;  m=m0;  R=R0;
+}
+void Cuerpo::CalculeFuerza(void){
+  double aux=-GM*m*pow(x*x+y*y,-1.5);
+  Fx=x*aux; Fy=y*aux;
+}
+
+
+void Cuerpo::Mueva_r1(double dt)
+{
+  x+=Vx*chi*dt;  y+=Vy*chi*dt;
+}
+
+void Cuerpo::Mueva_V(double dt){
+  Vx+=Fx*dt/m;    Vy+=Fy*dt/m;
+}
+
+void Cuerpo::Mueva_r2(double dt)
+{
+  x+=Vx*(uno_2chi)*dt;    y+=Vy*(uno_2chi)*dt;
+
+}
+void Cuerpo::Dibujese(void){
+  cout<<", "<<x<<"+"<<R<<"*cos(t),"<<y<<"+"<<R<<"*sin(t)";
+}
+//-------------------------------------
+void InicieAnimacion(void){
+  //  cout<<"set terminal gif animate"<<endl; 
+  //  cout<<"set output 'MiBalon.gif'"<<endl;
+  cout<<"unset key"<<endl;
+  cout<<"set xrange [-12:12]"<<endl;
+  cout<<"set yrange [-12:12]"<<endl;
+  cout<<"set size ratio -1"<<endl;
+  cout<<"set parametric"<<endl;
+  cout<<"set trange [0:7]"<<endl;
+  cout<<"set isosamples 12"<<endl;  
+}
+void InicieCuadro(void){
+    cout<<"plot 0,0 ";
+}
+void TermineCuadro(void){
+    cout<<endl;
+}
+
+
+int main(void){
+  Cuerpo Planeta;
+  double t,Deltat=0.01;
+  double r=10,m=1; 
+  double Omega,Vy0, T, tmax,tdibujo;
+  int ndibujos=1000;
+
+  Omega=sqrt(GM*pow(r,-3)); Vy0=Omega*r; T=2*M_PI/Omega;
+  tmax=1.1*T; tdibujo;
+
+  // InicieAnimacion();
+
+  //------------(x0,y0,Vx0,Vy0,m0   ,R0);
+  Planeta.Inicie(r ,0 ,  0,0.5*Vy0,m    ,1 );
+ 
+ 
+  for(t=0,tdibujo=0;t<tmax;t+=Deltat,tdibujo+=Deltat){
+        cout<<Planeta.Getx()<<" "<<Planeta.Gety()<<endl;
+    //Animacion
+    /*
+    if(tdibujo>tmax/ndibujos){
+      InicieCuadro();
+      Planeta.Dibujese();
+      TermineCuadro();
+      tdibujo=0;
+    }
+    */
+	Planeta.Mueva_r(Deltat);
+	Planeta.CalculeFuerza();
+        Planeta.Mueva_V(Deltat);	Planeta.Mueva_r(Deltat);
+	Planeta.CalculeFuerza();
+	Planeta.Mueva_V(Deltat);	Planeta.Mueva_r(Deltat);
+  }
+
+  return 0;
+}
+
+// g++ UnPlaneta.cpp
+// ./a.out | gnuplot
